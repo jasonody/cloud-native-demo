@@ -1,0 +1,50 @@
+service: ar-event-streaming-demo
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - kinesis:PutRecord
+      Resource:
+        Fn::GetAtt:
+          - Stream
+          - Arn
+  
+functions:
+  producer:
+    handler: handler.producer
+    events:
+      - http:
+          path: mailbox/{id}
+          method: post
+          cors: true
+    environment:
+      STREAM_NAME:
+        Ref: Stream
+
+package:
+  exclude:
+    - node_modules/**
+    - '!node_modules/highland/**'
+    - '!node_modules/util-deprecate/**'
+    - '!node_modules/uuid/**'
+
+resources:
+  Resources:
+    Stream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${opt:stage}-${self:service}-stream
+        RetentionPeriodHours: 24
+        ShardCount: 1
+  Outputs:
+    streamName:
+      Value: 
+        Ref: Stream
+    streamArn:
+      Value: 
+        Fn::GetAtt:
+          - Stream
+          - Arn

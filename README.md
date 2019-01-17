@@ -1,2 +1,2 @@
-# cloud-native-demo
-Cloud native demo for SkySlope
+# Event Streaming Demo
+Event streaming demo for SkySlope

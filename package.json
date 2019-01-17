@@ -1,0 +1,28 @@
+{
+  "name": "event-streaming-demo",
+  "version": "1.0.0",
+  "description": "Event streaming demo for SkySlope",
+  "main": "handler.js",
+  "scripts": {
+    "dp": "sls deploy -v -r us-east-1 -s dev",
+    "rm": "sls remove -v -r us-east-1 -s dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonody/event-streaming-demo.git"
+  },
+  "author": "Jason Ody",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jasonody/event-streaming-demo/issues"
+  },
+  "homepage": "https://github.com/jasonody/event-streaming-demo#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.389.0",
+    "serverless": "^1.36.1"
+  },
+  "dependencies": {
+    "highland": "^2.13.0",
+    "uuid": "^3.3.2"
+  }
+}
