@@ -2,6 +2,8 @@ service: ar-event-streaming-demo
 
 provider:
   name: aws
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
   runtime: nodejs8.10
   iamRoleStatements:
     - Effect: Allow
@@ -17,12 +19,44 @@ functions:
     handler: handler.producer
     events:
       - http:
-          path: mailbox/{id}
+          path: producer/
           method: post
           cors: true
+    memorySize: 128
     environment:
       STREAM_NAME:
         Ref: Stream
+  createMailbox:
+    handler: handler.createMailbox
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - Stream
+              - Arn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+    memorySize: 128
+    environment:
+      STREAM_NAME:
+        Ref: Stream
+  updateListing:
+    handler: handler.updateListing
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - Stream
+              - Arn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+    memorySize: 128
+    environment:
+      STREAM_NAME:
+        Ref: Stream
+    
 
 package:
   exclude:
@@ -36,7 +70,7 @@ resources:
     Stream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: ${opt:stage}-${self:service}-stream
+        Name: ${self:provider.stage}-${self:service}-stream
         RetentionPeriodHours: 24
         ShardCount: 1
   Outputs:
