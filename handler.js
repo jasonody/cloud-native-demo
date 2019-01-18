@@ -45,7 +45,7 @@ module.exports.createMailbox = (event, context, callback) => {
     .tap(uow => console.log('createMailbox record ==> Uow: %j', uow))
     .filter(filterForListingCreated)
     //.tap(itsAllGonePeteTong)
-    .map(processMailbox)
+    .flatMap(processMailbox)
     .flatMap(publishMailboxCreated)
     .collect()
     .toCallback(callback);
@@ -60,9 +60,13 @@ const itsAllGonePeteTong = () => {
 }
 
 const processMailbox = (uow) => {
-  uow.mailbox = uow.event.item.email
+  console.log('CREATING MAILBOX')
 
-  return uow
+  const mailbox = `${uow.event.item.address.replace(/\s/g,'')}${uow.event.item.iterator || ''}@skyslope.com`
+
+  uow.mailbox = mailbox
+
+  return _(Promise.resolve(uow))
 }
 
 const publishMailboxCreated = (uow) => {
@@ -71,7 +75,7 @@ const publishMailboxCreated = (uow) => {
     mailbox: uow.mailbox
   }
 
-  const streamEvent = {
+  const event = {
     id: uuid.v1(),
     type: 'mailbox-created',
     timestamp: Date.now(),
@@ -81,9 +85,10 @@ const publishMailboxCreated = (uow) => {
   const params = {
     StreamName: process.env.STREAM_NAME,
     PartitionKey: item.id,
-    Data: new Buffer.from(JSON.stringify(streamEvent)),
+    Data: new Buffer.from(JSON.stringify(event)),
   };
 
+  console.log('mailbox created event: %j', event)
   console.log('mailbox created kinesis params: %j', params)
 
   const kinesis = new aws.Kinesis()
@@ -105,5 +110,7 @@ const filterForMailboxCreated = (uow) => uow.event.type === 'mailbox-created'
 
 const updateListingWithMailbox = (uow) => {
   //TODO:Update listing's mailbox
+  console.log('UPDATING LISTING WITH MAILBOX')
+
   return _(Promise.resolve({}))
 }
