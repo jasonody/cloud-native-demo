@@ -15,11 +15,11 @@ provider:
           - Arn
   
 functions:
-  producer:
-    handler: handler.producer
+  command:
+    handler: handler.command
     events:
       - http:
-          path: producer/
+          path: command/
           method: post
           cors: true
     memorySize: 128

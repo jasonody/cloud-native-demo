@@ -4,7 +4,7 @@ const aws = require('aws-sdk');
 const _ = require('highland');
 const uuid = require('uuid');
 
-module.exports.producer = (event, context, callback) => {
+module.exports.command = (event, context, callback) => {
   console.log('event: %j', event)
 
   const item = JSON.parse(event.body)
@@ -22,7 +22,7 @@ module.exports.producer = (event, context, callback) => {
     Data: new Buffer.from(JSON.stringify(streamEvent)),
   };
 
-  console.log('producer kinesis params: %j', params)
+  console.log('command kinesis params: %j', params)
 
   const kinesis = new aws.Kinesis()
 
