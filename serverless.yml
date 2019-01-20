@@ -57,6 +57,8 @@ functions:
       STREAM_NAME:
         Ref: Stream
     
+plugins:
+  - serverless-offline
 
 package:
   exclude:

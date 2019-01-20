@@ -4,6 +4,11 @@ const aws = require('aws-sdk');
 const _ = require('highland');
 const uuid = require('uuid');
 
+if (process.env.IS_OFFLINE) { //for serverless offline
+  process.env.STREAM_NAME = process.env.OFFLINE_STREAM_NAME
+}
+
+//command is available offline
 module.exports.command = (event, context, callback) => {
   console.log('event: %j', event)
 
@@ -56,7 +61,7 @@ const mapRecordToUow = (record) => ({ event: JSON.parse(new Buffer.from(record.k
 const filterForListingCreated = (uow) => uow.event.type === 'listing-created'
 
 const itsAllGonePeteTong = () => {
-  throw new Error('Something happened and it\'s probably not what you wanted.')
+  throw new Error('This probably synchronous and all did not happen :\'(')
 }
 
 const processMailbox = (uow) => {

@@ -5,7 +5,8 @@
   "main": "handler.js",
   "scripts": {
     "dp": "sls deploy -v -r us-east-1 -s dev",
-    "rm": "sls remove -v -r us-east-1 -s dev"
+    "rm": "sls remove -v -r us-east-1 -s dev",
+    "offline": "AWS_REGION=us-east-1 OFFLINE_STREAM_NAME=dev-ar-event-streaming-demo-stream sls offline start"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,8 @@
   "homepage": "https://github.com/jasonody/event-streaming-demo#readme",
   "devDependencies": {
     "aws-sdk": "^2.389.0",
-    "serverless": "^1.36.1"
+    "serverless": "^1.36.1",
+    "serverless-offline": "^4.1.4"
   },
   "dependencies": {
     "highland": "^2.13.0",
