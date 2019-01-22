@@ -15,11 +15,11 @@ provider:
           - Arn
   
 functions:
-  command:
-    handler: handler.command
+  createTransaction:
+    handler: handler.createTransaction
     events:
       - http:
-          path: command/
+          path: transaction/
           method: post
           cors: true
     memorySize: 128
@@ -41,8 +41,8 @@ functions:
     environment:
       STREAM_NAME:
         Ref: Stream
-  updateListing:
-    handler: handler.updateListing
+  updateTransaction:
+    handler: handler.updateTransaction
     events:
       - stream:
           type: kinesis

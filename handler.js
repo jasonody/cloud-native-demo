@@ -8,15 +8,15 @@ if (process.env.IS_OFFLINE) { //for serverless offline
   process.env.STREAM_NAME = process.env.OFFLINE_STREAM_NAME
 }
 
-//command is available offline
-module.exports.command = (event, context, callback) => {
+//createTransaction is available offline
+module.exports.createTransaction = (event, context, callback) => {
   console.log('event: %j', event)
 
   const item = JSON.parse(event.body)
 
   const streamEvent = {
     id: uuid.v1(),
-    type: 'listing-created',
+    type: 'transaction-created',
     timestamp: Date.now(),
     item
   };
@@ -33,7 +33,7 @@ module.exports.command = (event, context, callback) => {
 
   kinesis.putRecord(params).promise()
     .then(resp => callback(null, {
-      statusCode: 202,
+      statusCode: 201,
       headers: {
         'access-control-allow-origin': '*', // CORS support
         'cache-control': 'no-cache',
@@ -48,7 +48,7 @@ module.exports.createMailbox = (event, context, callback) => {
   _(event.Records)
     .map(mapRecordToUow)
     .tap(uow => console.log('createMailbox record ==> Uow: %j', uow))
-    .filter(filterForListingCreated)
+    .filter(filterForFileCreated)
     //.tap(itsAllGonePeteTong)
     .flatMap(processMailbox)
     .flatMap(publishMailboxCreated)
@@ -58,7 +58,7 @@ module.exports.createMailbox = (event, context, callback) => {
 
 const mapRecordToUow = (record) => ({ event: JSON.parse(new Buffer.from(record.kinesis.data, 'base64')) })
 
-const filterForListingCreated = (uow) => uow.event.type === 'listing-created'
+const filterForFileCreated = (uow) => uow.event.type === 'listing-created' || uow.event.type === 'transaction-created'
 
 const itsAllGonePeteTong = () => {
   throw new Error('This probably synchronous and all did not happen :\'(')
@@ -101,21 +101,21 @@ const publishMailboxCreated = (uow) => {
   return _(kinesis.putRecord(params).promise())
 }
 
-module.exports.updateListing = (event, context, callback) => {
+module.exports.updateTransaction = (event, context, callback) => {
   _(event.Records)
     .map(mapRecordToUow)
-    .tap(uow => console.log('updateListing record ==> UoW: %j', uow))
+    .tap(uow => console.log('updateTransaction record ==> UoW: %j', uow))
     .filter(filterForMailboxCreated)
-    .flatMap(updateListingWithMailbox)
+    .flatMap(updateTransactionWithMailbox)
     .collect()
     .toCallback(callback);
 }
 
 const filterForMailboxCreated = (uow) => uow.event.type === 'mailbox-created'
 
-const updateListingWithMailbox = (uow) => {
+const updateTransactionWithMailbox = (uow) => {
   //TODO:Update listing's mailbox
-  console.log('UPDATING LISTING WITH MAILBOX')
+  console.log('UPDATING TRANSACTION WITH MAILBOX')
 
   return _(Promise.resolve({}))
 }
