@@ -1,7 +1,7 @@
 {
   "name": "event-streaming-demo",
   "version": "1.0.0",
-  "description": "Event streaming demo for SkySlope",
+  "description": "Event streaming demo expanded",
   "main": "handler.js",
   "scripts": {
     "dp": "sls deploy -v -r us-east-1 -s dev",
@@ -20,8 +20,7 @@
   "homepage": "https://github.com/jasonody/event-streaming-demo#readme",
   "devDependencies": {
     "aws-sdk": "^2.389.0",
-    "serverless": "^1.36.1",
-    "serverless-offline": "^4.1.4"
+    "serverless": "^1.36.1"
   },
   "dependencies": {
     "highland": "^2.13.0",

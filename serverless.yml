@@ -15,8 +15,8 @@ provider:
           - Arn
   
 functions:
-  createTransaction:
-    handler: handler.createTransaction
+  transactionCommand:
+    handler: transaction-handler.command
     events:
       - http:
           path: transaction/
@@ -56,9 +56,6 @@ functions:
     environment:
       STREAM_NAME:
         Ref: Stream
-    
-plugins:
-  - serverless-offline
 
 package:
   exclude:

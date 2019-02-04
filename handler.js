@@ -4,15 +4,11 @@ const aws = require('aws-sdk');
 const _ = require('highland');
 const uuid = require('uuid');
 
-if (process.env.IS_OFFLINE) { //for serverless offline
-  process.env.STREAM_NAME = process.env.OFFLINE_STREAM_NAME
-}
-
-//createTransaction is available offline
 module.exports.createTransaction = (event, context, callback) => {
   console.log('event: %j', event)
 
   const item = JSON.parse(event.body)
+  item.id = uuid.v4()
 
   const streamEvent = {
     id: uuid.v1(),
