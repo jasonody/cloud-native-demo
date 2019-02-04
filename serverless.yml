@@ -13,6 +13,13 @@ provider:
         Fn::GetAtt:
           - Stream
           - Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        Fn::GetAtt:
+          - TransactionTable
+          - Arn
   
 functions:
   transactionCommand:
@@ -22,6 +29,21 @@ functions:
           path: transaction/
           method: post
           cors: true
+    memorySize: 128
+    environment:
+      TRANSACTION_TABLE:
+        Ref: TransactionTable
+  transactionPublish:
+    handler: transaction-handler.publish
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - TransactionTable
+              - StreamArn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
     memorySize: 128
     environment:
       STREAM_NAME:
@@ -72,6 +94,21 @@ resources:
         Name: ${self:provider.stage}-${self:service}-stream
         RetentionPeriodHours: 24
         ShardCount: 1
+    TransactionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.stage}-${self:service}-transactions
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
   Outputs:
     streamName:
       Value: 
