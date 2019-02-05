@@ -26,7 +26,7 @@ functions:
     handler: transaction-handler.command
     events:
       - http:
-          path: transaction/
+          path: transactions/
           method: post
           cors: true
     memorySize: 128

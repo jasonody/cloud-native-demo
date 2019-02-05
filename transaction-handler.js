@@ -33,28 +33,39 @@ module.exports.command = (event, context, callback) => {
 
 module.exports.publish = (event, context, callback) => {
   _(event.Records)
-  .tap(r => console.log('record: %j', r))
-  //.map(covertToJSON)
-  //.flatMap(putObject)
-  .collect()
-  .toCallback(callback)
+    .map(convertToUoW)
+    .tap(uow => console.log('uow: %j', uow))
+    .flatMap(publishEvent)
+    .collect()
+    .toCallback(callback)
 }
 
-const publishEvent = (record) => {
-  //TODO: CREATE item FROM RECORD
+const convertToUoW = (record) => {
+  const uow = {
+    record,
+    item: {
+      keys: aws.DynamoDB.Converter.unmarshall(record.dynamodb.Keys),
+      oldImage: aws.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage),
+      newImage: aws.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage)
+    }
+  }
 
+  return uow
+}
+
+const publishEvent = (uow) => {
   const streamEvent = {
     id: uuid.v1(),
     type: 'transaction-created',
     timestamp: Date.now(),
-    item
+    item: uow.item
   }
 
   console.log('kinesis event: %j', streamEvent)
 
   const params = {
     StreamName: process.env.STREAM_NAME,
-    PartitionKey: item.id,
+    PartitionKey: uow.item.keys.id,
     Data: new Buffer.from(JSON.stringify(streamEvent)),
   }
 
