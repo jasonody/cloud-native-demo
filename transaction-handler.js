@@ -16,7 +16,7 @@ module.exports.command = (event, context, callback) => {
   const params = {
     TableName: process.env.TRANSACTION_TABLE,
     Item: item,
-  };
+  }
 
   console.log('dynamoDB params: %j', params)
 
@@ -42,7 +42,7 @@ module.exports.publish = (event, context, callback) => {
 
 const convertToUoW = (record) => {
   const uow = {
-    record,
+    event: record,
     item: {
       keys: aws.DynamoDB.Converter.unmarshall(record.dynamodb.Keys),
       oldImage: aws.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage),

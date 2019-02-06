@@ -4,40 +4,6 @@ const aws = require('aws-sdk');
 const _ = require('highland');
 const uuid = require('uuid');
 
-module.exports.createTransaction = (event, context, callback) => {
-  console.log('event: %j', event)
-
-  const item = JSON.parse(event.body)
-  item.id = uuid.v4()
-
-  const streamEvent = {
-    id: uuid.v1(),
-    type: 'transaction-created',
-    timestamp: Date.now(),
-    item
-  };
-
-  const params = {
-    StreamName: process.env.STREAM_NAME,
-    PartitionKey: item.id,
-    Data: new Buffer.from(JSON.stringify(streamEvent)),
-  };
-
-  console.log('command kinesis params: %j', params)
-
-  const kinesis = new aws.Kinesis()
-
-  kinesis.putRecord(params).promise()
-    .then(resp => callback(null, {
-      statusCode: 201,
-      headers: {
-        'access-control-allow-origin': '*', // CORS support
-        'cache-control': 'no-cache',
-      },
-    }))
-    .catch(err => callback(err))
-}
-
 module.exports.createMailbox = (event, context, callback) => {
   console.log('createMailbox stream event: %j', event);
 
@@ -57,7 +23,7 @@ const mapRecordToUow = (record) => ({ event: JSON.parse(new Buffer.from(record.k
 const filterForFileCreated = (uow) => uow.event.type === 'listing-created' || uow.event.type === 'transaction-created'
 
 const itsAllGonePeteTong = () => {
-  throw new Error('This probably synchronous and all did not happen :\'(')
+  throw new Error('Something went wrong...:\'(')
 }
 
 const processMailbox = (uow) => {

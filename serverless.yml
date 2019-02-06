@@ -20,6 +20,13 @@ provider:
         Fn::GetAtt:
           - TransactionTable
           - Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        Fn::GetAtt:
+          - MailboxTable
+          - Arn
   
 functions:
   transactionCommand:
@@ -48,21 +55,6 @@ functions:
     environment:
       STREAM_NAME:
         Ref: Stream
-  createMailbox:
-    handler: handler.createMailbox
-    events:
-      - stream:
-          type: kinesis
-          arn:
-            Fn::GetAtt:
-              - Stream
-              - Arn
-          batchSize: 100
-          startingPosition: TRIM_HORIZON
-    memorySize: 128
-    environment:
-      STREAM_NAME:
-        Ref: Stream
   updateTransaction:
     handler: handler.updateTransaction
     events:
@@ -76,6 +68,39 @@ functions:
           startingPosition: TRIM_HORIZON
     memorySize: 128
     environment:
+      STREAM_NAME:
+        Ref: Stream
+
+  mailboxPublish:
+    handler: mailbox-handler.publish
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - MailboxTable
+              - StreamArn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+    memorySize: 128
+    environment:
+      STREAM_NAME:
+        Ref: Stream
+  mailboxSubscribe:
+    handler: mailbox-handler.subscribe
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - Stream
+              - Arn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+    memorySize: 128
+    environment:
+      MAILBOX_TABLE:
+        Ref: MailboxTable
       STREAM_NAME:
         Ref: Stream
 
@@ -103,6 +128,21 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    MailboxTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.stage}-${self:service}-mailboxes
+        AttributeDefinitions:
+          - AttributeName: mailbox
+            AttributeType: S
+        KeySchema:
+          - AttributeName: mailbox
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
