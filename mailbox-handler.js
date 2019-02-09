@@ -11,6 +11,7 @@ module.exports.publish = (event, context, callback) => {
   _(event.Records)
     .map(convertDynamoDBRecordToUoW)
     .tap(uow => console.log('uow: %j', uow))
+    .filter(filterForInsert)
     .flatMap(publishEvent)
     .collect()
     .toCallback(callback)
@@ -28,6 +29,8 @@ const convertDynamoDBRecordToUoW = (record) => {
 
   return uow
 }
+
+const filterForInsert = (uow) => uow.event.eventName === 'INSERT'
 
 const publishEvent = (uow) => {
   const streamEvent = {
@@ -50,15 +53,16 @@ const publishEvent = (uow) => {
 
 module.exports.subscribe = (event, context, callback) => {
   _(event.Records)
-    .map(convertRecordToUow)
+    .map(convertKinesisRecordToUow)
     .filter(filterForFileCreated)
+    .tap(uow => console.log('uow: %j', uow))
     //.tap(itsAllGonePeteTong)
     .flatMap(createMailbox)
     .collect()
     .toCallback(callback)
 }
 
-const convertRecordToUow = (record) => ({ event: JSON.parse(new Buffer.from(record.kinesis.data, 'base64')) })
+const convertKinesisRecordToUow = (record) => ({ event: JSON.parse(new Buffer.from(record.kinesis.data, 'base64')) })
 
 const filterForFileCreated = (uow) => uow.event.type === 'listing-created' || uow.event.type === 'transaction-created'
 
@@ -73,8 +77,8 @@ const createMailbox = (uow) => {
 
   const item = {
     mailbox,
-    id: uow.event.id,
-    address: uow.event.address
+    id: uow.event.item.newImage.id,
+    address: uow.event.item.newImage.address
   }
 
   console.log('new mailbox: %j', item)

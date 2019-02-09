@@ -12,6 +12,7 @@ module.exports.command = (event, context, callback) => {
 
   const item = JSON.parse(event.body)
   item.id = uuid.v4()
+  item.mailbox = '|processing|'
 
   const params = {
     TableName: process.env.TRANSACTION_TABLE,
@@ -33,30 +34,36 @@ module.exports.command = (event, context, callback) => {
 
 module.exports.publish = (event, context, callback) => {
   _(event.Records)
-    .map(convertToUoW)
+    .map(convertDynamoDBRecordToUoW)
     .tap(uow => console.log('uow: %j', uow))
     .flatMap(publishEvent)
     .collect()
     .toCallback(callback)
 }
 
-const convertToUoW = (record) => {
+const convertDynamoDBRecordToUoW = (record) => {
   const uow = {
     event: record,
     item: {
       keys: aws.DynamoDB.Converter.unmarshall(record.dynamodb.Keys),
-      oldImage: aws.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage),
-      newImage: aws.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage)
+      oldImage: record.dynamodb.OldImage ? aws.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage) : null,
+      newImage: record.dynamodb.NewImage ? aws.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage) : null
     }
   }
 
   return uow
 }
 
+const TRANSACTION_EVENT_MAPPINGS = {
+  'INSERT': 'transaction-created',
+  'MODIFY': 'transaction-updated',
+  'REMOVE': 'transcation-removed'
+}
+
 const publishEvent = (uow) => {
   const streamEvent = {
     id: uuid.v1(),
-    type: 'transaction-created',
+    type: TRANSACTION_EVENT_MAPPINGS[uow.event.eventName],
     timestamp: Date.now(),
     item: uow.item
   }
@@ -73,5 +80,33 @@ const publishEvent = (uow) => {
 }
 
 module.exports.subscribe = (event, context, callback) => {
+  _(event.Records)
+    .map(convertKinesisRecordToUow)
+    .tap(uow => console.log('uow: %j', uow))
+    .filter(filterForMailboxCreated)
+    .flatMap(updateTransactionMailbox)
+    .collect()
+    .toCallback(callback)
+}
 
+const convertKinesisRecordToUow = (record) => ({ event: JSON.parse(new Buffer.from(record.kinesis.data, 'base64')) })
+
+const filterForMailboxCreated = (uow) => uow.event.type === 'mailbox-created'
+
+const updateTransactionMailbox = (uow) => {
+  var params = {
+    TableName: process.env.TRANSACTION_TABLE,
+    Key: { id : uow.event.item.newImage.id },
+    UpdateExpression: 'SET #a = :a',
+    ExpressionAttributeNames: {
+      '#a': 'mailbox'
+    },
+    ExpressionAttributeValues: {
+      ':a' : uow.event.item.newImage.mailbox
+    }
+  }
+
+  console.log('params: %j', params)
+
+  return _(db.update(params).promise())
 }

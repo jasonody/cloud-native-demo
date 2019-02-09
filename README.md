@@ -3,7 +3,7 @@
 ## Steps
 1. Execute `npm install`
 2. Execute `sls deploy -v`
-3. Execute `curl -d '{"address":"123 Grant St", "iterator": 1}' -H "Content-Type: application/json" -H "x-api-key: some-key" -X POST {replace this with the POST endpoint that is outputted from the Serverless deploy}/transactions`
+3. Execute `curl -d '{"address":"123 Grant St"}' -H "Content-Type: application/json" -H "x-api-key: some-key" -X POST {replace this with the POST endpoint that is outputted from the Serverless deploy}/transactions`
   - POST endpoint example: https://z0zxbak5d1.execute-api.us-east-1.amazonaws.com/dev
 
 ## Lambda Functions

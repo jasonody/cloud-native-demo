@@ -16,6 +16,7 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:PutItem
+        - dynamodb:UpdateItem
       Resource:
         Fn::GetAtt:
           - TransactionTable
@@ -70,6 +71,21 @@ functions:
     environment:
       STREAM_NAME:
         Ref: Stream
+  transactionSubscribe:
+    handler: transaction-handler.subscribe
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - Stream
+              - Arn
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+    memorySize: 128
+    environment:
+      TRANSACTION_TABLE:
+        Ref: TransactionTable
 
   mailboxPublish:
     handler: mailbox-handler.publish
