@@ -8,10 +8,10 @@
 
 ## Lambda Functions
 ### ar-event-streaming-demo-dev-command
-This Lambda receives the POST request to `/command` and publishes a "listing-created" event. In a real world example, this event would be published by the command that handles the creation of the listing. This lamdba simulates this.
+This Lambda receives the POST request to `/command` and publishes a "transaction-created" event. In a real world example, this event would be published by the command that handles the creation of the transaction. This lamdba simulates this.
 
 ### ar-event-streaming-demo-dev-createMailbox
-This Lambda reacts to the "listing-created" event and creates a new mailbox based on the data included in the event. Once the mailbox is created, it signals this by publishing a "mailbox-created" event and includes details of the new mailbox.
+This Lambda reacts to the "transaction-created" event and creates a new mailbox based on the data included in the event. Once the mailbox is created, it signals this by publishing a "mailbox-created" event and includes details of the new mailbox.
 
-### ar-event-streaming-demo-dev-updateListing
-This Lambda reacts to the "mailbox-created" event and updates the specified listing with the mailbox details included in the event.
+### ar-event-streaming-demo-dev-updateTransaction
+This Lambda reacts to the "mailbox-created" event and updates the specified transaction with the mailbox details included in the event.
